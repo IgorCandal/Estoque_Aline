@@ -61,8 +61,62 @@ public class ProdutoService {
         return produtoRepository.findAllByOrderByNomeAsc().stream().map(this::converterParaResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public ProdutoResponseDto buscarPorId(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        return converterParaResponse(produto);
+    }
+
+    @Transactional
+    public ProdutoResponseDto atualizar(Long id, ProdutoResponseDto dto, MultipartFile novaImagem) {
+        Produto produtoExistente = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (!produtoExistente.getCaixa().getId().equals(dto.caixaId())) {
+            Caixa novaCaixa = caixaRepository.findById(dto.caixaId())
+                    .orElseThrow(() -> new RuntimeException("Nova Caixa não encontrada"));
+            produtoExistente.setCaixa(novaCaixa);
+        }
+
+        produtoExistente.setNome(dto.nome());
+        produtoExistente.setCategoria(dto.categoria());
+        produtoExistente.setValidade(dto.validade());
+        produtoExistente.setPreco(dto.preco());
+        produtoExistente.setQuantidade(dto.quantidade());
+
+        if (novaImagem != null && !novaImagem.isEmpty()) {
+            deletarImagemLocal(produtoExistente.getImagemUrl());
+            String novaUrl = salvarImagemLocal(novaImagem);
+            produtoExistente.setImagemUrl(novaUrl);
+        }
+
+        Produto produtoAtualizado = produtoRepository.save(produtoExistente);
+        return converterParaResponse(produtoAtualizado);
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        deletarImagemLocal(produto.getImagemUrl());
+
+        produtoRepository.delete(produto);
+    }
+
+    private void deletarImagemLocal(String caminhoImagem) {
+        if (caminhoImagem != null && !caminhoImagem.isBlank()) {
+            try {
+                Path caminhoCompleto = Paths.get(caminhoImagem);
+                Files.deleteIfExists(caminhoCompleto);
+            } catch (IOException e) {
+                throw new RuntimeException("Falha ao deletar a imagem do disco local", e);
+            }
+        }
+    }
+
     private String salvarImagemLocal(MultipartFile arquivo) {
-        // 1. Validação: Se nenhum arquivo foi enviado, retorna nulo
         if (arquivo == null || arquivo.isEmpty()) {
             return null;
         }

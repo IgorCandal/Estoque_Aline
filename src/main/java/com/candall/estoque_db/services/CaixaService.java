@@ -24,9 +24,50 @@ public class CaixaService {
         }
 
         Caixa caixa = Caixa.builder().codigoCaixa(dto.codigoCaixa()).build();
-
         Caixa caixaSalva = caixaRepository.save(caixa);
         return converterParaResponse(caixaSalva);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CaixaResponseDto> listarTodos() {
+        return caixaRepository.findAll()
+                .stream()
+                .map(this::converterParaResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CaixaResponseDto buscarPorId(Long id) {
+        Caixa caixa = caixaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Caixa não encontrado com o ID: " + id));
+        return converterParaResponse(caixa);
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        Caixa caixa = caixaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
+
+        if (caixa.getProdutos() != null && !caixa.getProdutos().isEmpty()) {
+            throw new RuntimeException("Não é possível deletar um caixa que possui produtos");
+        }
+
+        caixaRepository.delete(caixa);
+    }
+
+    @Transactional
+    public CaixaResponseDto atualizarCodigo(Long id, CaixaRequestDto dto) {
+        Caixa caixa = caixaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
+
+        if (!caixa.getCodigoCaixa().equals(dto.codigoCaixa()) &&
+                caixaRepository.existsByCodigoCaixa(dto.codigoCaixa())) {
+            throw new RuntimeException("Código de caixa já existe");
+        }
+
+        caixa.setCodigoCaixa(dto.codigoCaixa());
+
+        return converterParaResponse(caixa);
     }
 
     private CaixaResponseDto converterParaResponse(Caixa caixa){

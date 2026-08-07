@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "produto_db")
@@ -24,7 +24,7 @@ public class Produto {
     private String nome;
 
     private String categoria;
-    private LocalDateTime validade;
+    private LocalDate validade;
 
     @Column(name = "imagem_url", length = 500)
     private String imagemUrl;
@@ -42,5 +42,13 @@ public class Produto {
     @ManyToOne
     @JoinColumn(name = "caixa_id", nullable = false)
     private Caixa caixa;
+
+    @PrePersist
+    @PreUpdate
+    public void calcularPrecoTotal() {
+        if (this.preco != null && this.quantidade != null) {
+            this.precoTotal = this.preco.multiply(java.math.BigDecimal.valueOf(this.quantidade));
+        }
+    }
 
 }

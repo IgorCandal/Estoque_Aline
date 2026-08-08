@@ -2,6 +2,7 @@ package com.candall.estoque_db.services;
 
 import com.candall.estoque_db.models.Caixa;
 import com.candall.estoque_db.models.Produto;
+import com.candall.estoque_db.models.dto.ProdutoRequestDto;
 import com.candall.estoque_db.models.dto.ProdutoResponseDto;
 import com.candall.estoque_db.repositories.CaixaRepository;
 import com.candall.estoque_db.repositories.ProdutoRepository;
@@ -15,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @Service
@@ -26,56 +26,126 @@ public class ProdutoService {
     private final CaixaRepository caixaRepository;
 
     @Transactional
-    public ProdutoResponseDto criar(ProdutoResponseDto dto, MultipartFile imagem){
-        Caixa caixa = caixaRepository.findById(dto.caixaId())
-                .orElseThrow(()-> new RuntimeException("Caixa não encontrada"));
+    public ProdutoResponseDto criar(ProdutoRequestDto dto, MultipartFile imagem) throws IOException {
 
-        String urlImagem = salvarImagemLocal(imagem);
+        String uploadDir = "uploads/";
+
+        Caixa caixa = caixaRepository.findById(dto.caixaId())
+                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrada e/ou não existe"));
+
+        File directory = new File(uploadDir);
+
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        String imageName = imagem.getOriginalFilename();
+        Path filePath = Paths.get(uploadDir+imageName);
+        Files.write(filePath, imagem.getBytes());
 
         Produto produto = Produto.builder()
-                .nome(dto.nome())
-                .categoria(dto.categoria())
-                .validade(dto.validade())
-                .preco(dto.preco())
-                .quantidade(dto.quantidade())
-                .imagemUrl(urlImagem)
-                .caixa(caixa)
-                .build();
+                                 .nome(dto.nome())
+                                 .categoria(dto.categoria())
+                                 .validade(dto.validade())
+                                 .preco(dto.preco())
+                                 .quantidade(dto.quantidade())
+                                 .imagemUrl("http://localhost:8080/uploads/"+imageName.replace(" ", "-"))
+                                 .caixa(caixa)
+                                 .build();
 
         Produto produtoSalvo = produtoRepository.save(produto);
-        return converterParaResponse(produtoSalvo);
+
+        return new ProdutoResponseDto(
+                produtoSalvo.getNome(),
+                produtoSalvo.getCategoria(),
+                produtoSalvo.getValidade(),
+                produtoSalvo.getImagemUrl(),
+                produtoSalvo.getPreco(),
+                produtoSalvo.getQuantidade(),
+                produtoSalvo.getPrecoTotal(),
+                produtoSalvo.getCaixa().getId()
+        );
     }
 
     @Transactional(readOnly = true)
-    public List<ProdutoResponseDto> listarPorValidadeCrescente(){
-        return produtoRepository.findByOrderByValidadeAsc().stream().map(this::converterParaResponse).toList();
+    public List<ProdutoResponseDto> listarPorValidadeCrescente() {
+
+        return produtoRepository.findByOrderByValidadeAsc()
+                                .stream()
+                                .map(p -> new ProdutoResponseDto(
+                                             p.getNome(),
+                                             p.getCategoria(),
+                                             p.getValidade(),
+                                             p.getImagemUrl(),
+                                             p.getPreco(),
+                                             p.getQuantidade(),
+                                             p.getPrecoTotal(),
+                                             p.getCaixa().getId())).toList();
     }
 
     @Transactional(readOnly = true)
     public List<ProdutoResponseDto> listarPorQuantidadeDecrescente() {
-        return produtoRepository.findAllByOrderByQuantidadeDesc().stream().map(this::converterParaResponse).toList();
+
+        return produtoRepository.findAllByOrderByQuantidadeDesc()
+                .stream()
+                .map(p -> new ProdutoResponseDto(
+                        p.getNome(),
+                        p.getCategoria(),
+                        p.getValidade(),
+                        p.getImagemUrl(),
+                        p.getPreco(),
+                        p.getQuantidade(),
+                        p.getPrecoTotal(),
+                        p.getCaixa().getId()
+                )).toList();
     }
 
     @Transactional(readOnly = true)
     public List<ProdutoResponseDto> listarPorNomeCrescente() {
-        return produtoRepository.findAllByOrderByNomeAsc().stream().map(this::converterParaResponse).toList();
+
+        return produtoRepository.findAllByOrderByNomeAsc()
+                .stream()
+                .map(p -> new ProdutoResponseDto(
+                        p.getNome(),
+                        p.getCategoria(),
+                        p.getValidade(),
+                        p.getImagemUrl(),
+                        p.getPreco(),
+                        p.getQuantidade(),
+                        p.getPrecoTotal(),
+                        p.getCaixa().getId()
+                )).toList();
     }
 
     @Transactional(readOnly = true)
     public ProdutoResponseDto buscarPorId(Long id) {
+
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-        return converterParaResponse(produto);
+
+        return new ProdutoResponseDto(
+                produto.getNome(),
+                produto.getCategoria(),
+                produto.getValidade(),
+                produto.getImagemUrl(),
+                produto.getPreco(),
+                produto.getQuantidade(),
+                produto.getPrecoTotal(),
+                produto.getCaixa().getId()
+        );
     }
 
     @Transactional
-    public ProdutoResponseDto atualizar(Long id, ProdutoResponseDto dto, MultipartFile novaImagem) {
+    public ProdutoResponseDto atualizar(Long id, ProdutoRequestDto dto, MultipartFile novaImagem) throws IOException {
+
         Produto produtoExistente = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                                                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
         if (!produtoExistente.getCaixa().getId().equals(dto.caixaId())) {
+
             Caixa novaCaixa = caixaRepository.findById(dto.caixaId())
-                    .orElseThrow(() -> new RuntimeException("Nova Caixa não encontrada"));
+                                             .orElseThrow(() -> new RuntimeException("Nova Caixa não encontrada"));
+
             produtoExistente.setCaixa(novaCaixa);
         }
 
@@ -87,18 +157,28 @@ public class ProdutoService {
 
         if (novaImagem != null && !novaImagem.isEmpty()) {
             deletarImagemLocal(produtoExistente.getImagemUrl());
-            String novaUrl = salvarImagemLocal(novaImagem);
-            produtoExistente.setImagemUrl(novaUrl);
+            //String novaUrl = salvarImagemLocal(novaImagem);
+            produtoExistente.setImagemUrl(null);
         }
 
         Produto produtoAtualizado = produtoRepository.save(produtoExistente);
-        return converterParaResponse(produtoAtualizado);
+        return new ProdutoResponseDto(
+                produtoAtualizado.getNome(),
+                produtoAtualizado.getCategoria(),
+                produtoAtualizado.getValidade(),
+                produtoAtualizado.getImagemUrl(),
+                produtoAtualizado.getPreco(),
+                produtoAtualizado.getQuantidade(),
+                produtoAtualizado.getPrecoTotal(),
+                produtoAtualizado.getCaixa().getId()
+        );
     }
 
     @Transactional
     public void deletar(Long id) {
+
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                                           .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
         deletarImagemLocal(produto.getImagemUrl());
 
@@ -115,51 +195,4 @@ public class ProdutoService {
             }
         }
     }
-
-    private String salvarImagemLocal(MultipartFile arquivo) {
-        if (arquivo == null || arquivo.isEmpty()) {
-            return null;
-        }
-
-        try {
-            String diretorioDestino = "uploads/imagens/";
-            File pasta = new File(diretorioDestino);
-
-            if (!pasta.exists()) {
-                pasta.mkdirs();
-            }
-
-            String nomeUnicoArquivo = System.currentTimeMillis() + "_" + arquivo.getOriginalFilename();
-
-            Path caminhoCompleto = Paths.get(diretorioDestino + nomeUnicoArquivo);
-
-            Files.copy(arquivo.getInputStream(), caminhoCompleto, StandardCopyOption.REPLACE_EXISTING);
-
-            return caminhoCompleto.toString();
-
-        } catch (IOException e) {
-            throw new RuntimeException("Falha ao salvar a imagem localmente", e); // Substituir exceção
-        }
-    }
-
-    private ProdutoResponseDto converterParaResponse(Produto produto) {
-        String urlacessivel = null;
-        if(produto.getImagemUrl() != null){
-            String localhost = "http://localhost:8080/";
-            String caminhoFormatado = produto.getImagemUrl().replace("\\", "/");
-            urlacessivel = localhost + caminhoFormatado;
-        }
-        return new ProdutoResponseDto(
-                produto.getId(),
-                produto.getNome(),
-                produto.getCategoria(),
-                produto.getValidade(),
-                urlacessivel,
-                produto.getPreco(),
-                produto.getQuantidade(),
-                produto.getPrecoTotal(),
-                produto.getCaixa().getId()
-        );
-    }
-
 }

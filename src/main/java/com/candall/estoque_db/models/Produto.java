@@ -24,9 +24,9 @@ public class Produto {
     private String nome;
 
     private String categoria;
+
     private LocalDate validade;
 
-    @Column(name = "imagem_url", length = 500)
     private String imagemUrl;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -47,8 +47,7 @@ public class Produto {
     @PreUpdate
     public void calcularPrecoTotal() {
         if (this.preco != null && this.quantidade != null) {
-            this.precoTotal = this.preco.multiply(java.math.BigDecimal.valueOf(this.quantidade));
+            this.precoTotal = this.preco.multiply(BigDecimal.valueOf(this.quantidade));
         }
     }
-
 }

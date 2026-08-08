@@ -19,7 +19,8 @@ public class CaixaController {
     private final CaixaService caixaService;
 
     @PostMapping
-    public ResponseEntity<CaixaResponseDto> criar(@RequestBody @Valid CaixaRequestDto dto) {
+    public ResponseEntity<CaixaResponseDto> criar(@RequestParam String id) {
+        CaixaRequestDto dto = new CaixaRequestDto(id);
         CaixaResponseDto novoCaixa = caixaService.criar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoCaixa);
     }

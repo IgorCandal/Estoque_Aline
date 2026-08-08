@@ -9,7 +9,6 @@ import java.util.List;
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
-    List<Produto> findByCaixaId(Long caixaId);
     List<Produto> findByOrderByValidadeAsc();
     List<Produto> findAllByOrderByQuantidadeDesc();
     List<Produto> findAllByOrderByNomeAsc();

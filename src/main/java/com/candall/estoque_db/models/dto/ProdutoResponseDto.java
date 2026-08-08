@@ -7,15 +7,20 @@ import java.time.LocalDate;
 
 public record ProdutoResponseDto(
 
-        Long id,
         String nome,
+
         String categoria,
+
         @JsonFormat(pattern = "yyyy-MM-dd")
         LocalDate validade,
-        String imagemUrl,
-        BigDecimal preco,
-        Integer quantidade,
-        BigDecimal precoTotal,
-        Long caixaId
 
+        String imagemUrl,
+
+        BigDecimal preco,
+
+        Integer quantidade,
+
+        BigDecimal precoTotal,
+
+        Long caixaId
 ){}

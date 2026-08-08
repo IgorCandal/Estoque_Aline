@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 public record ProdutoResumoDto(
 
-        Long id,
         String nome,
         String categoria,
         BigDecimal preco,

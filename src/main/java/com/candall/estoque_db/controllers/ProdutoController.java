@@ -1,5 +1,6 @@
 package com.candall.estoque_db.controllers;
 
+import com.candall.estoque_db.models.dto.ProdutoRequestDto;
 import com.candall.estoque_db.models.dto.ProdutoResponseDto;
 import com.candall.estoque_db.services.ProdutoService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -18,12 +22,19 @@ public class ProdutoController {
 
     private final ProdutoService produtoService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ProdutoResponseDto> criar(
-            @RequestPart("produto") ProdutoResponseDto dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
+    @PostMapping
+    public ResponseEntity<ProdutoResponseDto> criar(@RequestParam String nome,
+                                                    @RequestParam String categoria,
+                                                    @RequestParam String validade,
+                                                    @RequestParam Double preco,
+                                                    @RequestParam Integer quantidade,
+                                                    @RequestParam Long ideCaixa,
+                                                    @RequestParam(value = "imagem") MultipartFile imagem) throws IOException {
+
+        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, LocalDate.parse(validade), BigDecimal.valueOf(preco), quantidade, ideCaixa);
 
         ProdutoResponseDto response = produtoService.criar(dto, imagem);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -53,9 +64,9 @@ public class ProdutoController {
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProdutoResponseDto> atualizar(
-            @PathVariable Long id,
-            @RequestPart("produto") ProdutoResponseDto dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
+            @RequestParam Long id,
+            @RequestPart("produto") ProdutoRequestDto dto,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem) throws IOException {
 
         ProdutoResponseDto response = produtoService.atualizar(id, dto, imagem);
         return ResponseEntity.ok(response);

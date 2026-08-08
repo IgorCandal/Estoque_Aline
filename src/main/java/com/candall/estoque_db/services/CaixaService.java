@@ -30,23 +30,27 @@ public class CaixaService {
 
     @Transactional(readOnly = true)
     public List<CaixaResponseDto> listarTodos() {
+
         return caixaRepository.findAll()
-                .stream()
-                .map(this::converterParaResponse)
-                .toList();
+                              .stream()
+                              .map(this::converterParaResponse)
+                              .toList();
     }
 
     @Transactional(readOnly = true)
     public CaixaResponseDto buscarPorId(Long id) {
+
         Caixa caixa = caixaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Caixa não encontrado com o ID: " + id));
+                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrado com o ID: " + id));
+
         return converterParaResponse(caixa);
     }
 
     @Transactional
     public void deletar(Long id) {
+
         Caixa caixa = caixaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
+                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
 
         if (caixa.getProdutos() != null && !caixa.getProdutos().isEmpty()) {
             throw new RuntimeException("Não é possível deletar um caixa que possui produtos");
@@ -57,11 +61,13 @@ public class CaixaService {
 
     @Transactional
     public CaixaResponseDto atualizarCodigo(Long id, CaixaRequestDto dto) {
+
         Caixa caixa = caixaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
+                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
 
         if (!caixa.getCodigoCaixa().equals(dto.codigoCaixa()) &&
                 caixaRepository.existsByCodigoCaixa(dto.codigoCaixa())) {
+
             throw new RuntimeException("Código de caixa já existe");
         }
 
@@ -71,20 +77,6 @@ public class CaixaService {
     }
 
     private CaixaResponseDto converterParaResponse(Caixa caixa){
-        List<ProdutoResumoDto> produtosDto = List.of();
-
-        if(caixa.getProdutos() != null){
-            produtosDto = caixa.getProdutos().stream().map(p -> new ProdutoResumoDto(
-                    p.getId(),
-                    p.getNome(),
-                    p.getCategoria(),
-                    p.getPreco(),
-                    p.getQuantidade(),
-                    p.getPrecoTotal(),
-                    p.getImagemUrl()
-            )).toList();
-        }
-        return new CaixaResponseDto(caixa.getId(), caixa.getCodigoCaixa(), produtosDto);
+        return new CaixaResponseDto(caixa.getId(), caixa.getCodigoCaixa());
     }
-
 }

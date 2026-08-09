@@ -25,23 +25,18 @@ public class ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final CaixaRepository caixaRepository;
 
+    private final String Upload = "uploads/";
+    private final String Base_URL = "http://localhost:8080/uploads/";
+
     @Transactional
     public ProdutoResponseDto criar(ProdutoRequestDto dto, MultipartFile imagem) throws IOException {
-
-        String uploadDir = "uploads/";
-
         Caixa caixa = caixaRepository.findById(dto.caixaId())
                                      .orElseThrow(() -> new RuntimeException("Caixa não encontrada e/ou não existe"));
 
-        File directory = new File(uploadDir);
-
-        if (!directory.exists()) {
-            directory.mkdirs();
+        String imagemUrl = null;
+        if (imagem != null && !imagem.isEmpty()) {
+            imagemUrl = salvarImagemLocal(imagem);
         }
-
-        String imageName = imagem.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir+imageName);
-        Files.write(filePath, imagem.getBytes());
 
         Produto produto = Produto.builder()
                                  .nome(dto.nome())
@@ -49,80 +44,128 @@ public class ProdutoService {
                                  .validade(dto.validade())
                                  .preco(dto.preco())
                                  .quantidade(dto.quantidade())
-                                 .imagemUrl("http://localhost:8080/uploads/"+imageName.replace(" ", "-"))
+                                 .imagemUrl(imagemUrl)
                                  .caixa(caixa)
                                  .build();
 
         Produto produtoSalvo = produtoRepository.save(produto);
-
-        return new ProdutoResponseDto(
-                produtoSalvo.getNome(),
-                produtoSalvo.getCategoria(),
-                produtoSalvo.getValidade(),
-                produtoSalvo.getImagemUrl(),
-                produtoSalvo.getPreco(),
-                produtoSalvo.getQuantidade(),
-                produtoSalvo.getPrecoTotal(),
-                produtoSalvo.getCaixa().getId()
-        );
+        return converterParaResponseDto(produtoSalvo);
     }
 
     @Transactional(readOnly = true)
     public List<ProdutoResponseDto> listarPorValidadeCrescente() {
-
         return produtoRepository.findByOrderByValidadeAsc()
-                                .stream()
-                                .map(p -> new ProdutoResponseDto(
-                                             p.getNome(),
-                                             p.getCategoria(),
-                                             p.getValidade(),
-                                             p.getImagemUrl(),
-                                             p.getPreco(),
-                                             p.getQuantidade(),
-                                             p.getPrecoTotal(),
-                                             p.getCaixa().getId())).toList();
+                .stream()
+                .map(this::converterParaResponseDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<ProdutoResponseDto> listarPorQuantidadeDecrescente() {
-
         return produtoRepository.findAllByOrderByQuantidadeDesc()
                 .stream()
-                .map(p -> new ProdutoResponseDto(
-                        p.getNome(),
-                        p.getCategoria(),
-                        p.getValidade(),
-                        p.getImagemUrl(),
-                        p.getPreco(),
-                        p.getQuantidade(),
-                        p.getPrecoTotal(),
-                        p.getCaixa().getId()
-                )).toList();
+                .map(this::converterParaResponseDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<ProdutoResponseDto> listarPorNomeCrescente() {
-
         return produtoRepository.findAllByOrderByNomeAsc()
                 .stream()
-                .map(p -> new ProdutoResponseDto(
-                        p.getNome(),
-                        p.getCategoria(),
-                        p.getValidade(),
-                        p.getImagemUrl(),
-                        p.getPreco(),
-                        p.getQuantidade(),
-                        p.getPrecoTotal(),
-                        p.getCaixa().getId()
-                )).toList();
+                .map(this::converterParaResponseDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public ProdutoResponseDto buscarPorId(Long id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        return converterParaResponseDto(produto);
+    }
 
+    @Transactional
+    public ProdutoResponseDto atualizar(Long id, ProdutoRequestDto dto, MultipartFile novaImagem) throws IOException {
+        Produto produtoExistente = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (dto.caixaId() != null && !produtoExistente.getCaixa().getId().equals(dto.caixaId())) {
+            Caixa novaCaixa = caixaRepository.findById(dto.caixaId())
+                    .orElseThrow(() -> new RuntimeException("Nova Caixa não encontrada"));
+            produtoExistente.setCaixa(novaCaixa);
+        }
+
+        if (dto.nome() != null) {
+            produtoExistente.setNome(dto.nome());
+        }
+
+        if (dto.categoria() != null) {
+            produtoExistente.setCategoria(dto.categoria());
+        }
+
+        if (dto.preco() != null) {
+            produtoExistente.setPreco(dto.preco());
+        }
+
+        if (dto.quantidade() != null) {
+            produtoExistente.setQuantidade(dto.quantidade());
+        }
+
+        if (dto.validade() != null) {
+            produtoExistente.setValidade(dto.validade());
+        }
+
+        if (novaImagem != null && !novaImagem.isEmpty()) {
+            deletarImagemLocal(produtoExistente.getImagemUrl());
+            String novaUrl = salvarImagemLocal(novaImagem);
+            produtoExistente.setImagemUrl(novaUrl);
+        }
+
+        Produto produtoAtualizado = produtoRepository.save(produtoExistente);
+        return converterParaResponseDto(produtoAtualizado);
+    }
+
+    @Transactional
+    public void deletar(Long id) {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
+        deletarImagemLocal(produto.getImagemUrl());
+        produtoRepository.delete(produto);
+    }
+
+    private String salvarImagemLocal(MultipartFile imagem) throws IOException {
+        if (imagem == null || imagem.isEmpty()) {
+            throw new IllegalArgumentException("O arquivo de imagem está vazio ou é inválido.");
+        }
+
+        File directory = new File(Upload);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        String originalName = imagem.getOriginalFilename();
+        String treatedName = originalName != null ? originalName.replace(" ", "-") : "sem-nome.jpg";
+
+        Path filePath = Paths.get(Upload + treatedName);
+        Files.write(filePath, imagem.getBytes());
+
+        return Base_URL + treatedName;
+    }
+
+
+    private void deletarImagemLocal(String urlImagem) {
+        if (urlImagem != null && urlImagem.startsWith(Base_URL)) {
+            try {
+                String nomeArquivo = urlImagem.substring(Base_URL.length());
+                Path caminhoCompleto = Paths.get(Upload + nomeArquivo);
+
+                Files.deleteIfExists(caminhoCompleto);
+            } catch (IOException e) {
+                throw new RuntimeException("Falha ao deletar a imagem do disco local", e);
+            }
+        }
+    }
+
+    private ProdutoResponseDto converterParaResponseDto(Produto produto) {
         return new ProdutoResponseDto(
                 produto.getNome(),
                 produto.getCategoria(),
@@ -133,66 +176,5 @@ public class ProdutoService {
                 produto.getPrecoTotal(),
                 produto.getCaixa().getId()
         );
-    }
-
-    @Transactional
-    public ProdutoResponseDto atualizar(Long id, ProdutoRequestDto dto, MultipartFile novaImagem) throws IOException {
-
-        Produto produtoExistente = produtoRepository.findById(id)
-                                                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-
-        if (!produtoExistente.getCaixa().getId().equals(dto.caixaId())) {
-
-            Caixa novaCaixa = caixaRepository.findById(dto.caixaId())
-                                             .orElseThrow(() -> new RuntimeException("Nova Caixa não encontrada"));
-
-            produtoExistente.setCaixa(novaCaixa);
-        }
-
-        produtoExistente.setNome(dto.nome());
-        produtoExistente.setCategoria(dto.categoria());
-        produtoExistente.setValidade(dto.validade());
-        produtoExistente.setPreco(dto.preco());
-        produtoExistente.setQuantidade(dto.quantidade());
-
-        if (novaImagem != null && !novaImagem.isEmpty()) {
-            deletarImagemLocal(produtoExistente.getImagemUrl());
-            //String novaUrl = salvarImagemLocal(novaImagem);
-            produtoExistente.setImagemUrl(null);
-        }
-
-        Produto produtoAtualizado = produtoRepository.save(produtoExistente);
-        return new ProdutoResponseDto(
-                produtoAtualizado.getNome(),
-                produtoAtualizado.getCategoria(),
-                produtoAtualizado.getValidade(),
-                produtoAtualizado.getImagemUrl(),
-                produtoAtualizado.getPreco(),
-                produtoAtualizado.getQuantidade(),
-                produtoAtualizado.getPrecoTotal(),
-                produtoAtualizado.getCaixa().getId()
-        );
-    }
-
-    @Transactional
-    public void deletar(Long id) {
-
-        Produto produto = produtoRepository.findById(id)
-                                           .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-
-        deletarImagemLocal(produto.getImagemUrl());
-
-        produtoRepository.delete(produto);
-    }
-
-    private void deletarImagemLocal(String caminhoImagem) {
-        if (caminhoImagem != null && !caminhoImagem.isBlank()) {
-            try {
-                Path caminhoCompleto = Paths.get(caminhoImagem);
-                Files.deleteIfExists(caminhoCompleto);
-            } catch (IOException e) {
-                throw new RuntimeException("Falha ao deletar a imagem do disco local", e);
-            }
-        }
     }
 }

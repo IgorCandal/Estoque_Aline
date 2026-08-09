@@ -4,6 +4,7 @@ import com.candall.estoque_db.models.dto.ProdutoRequestDto;
 import com.candall.estoque_db.models.dto.ProdutoResponseDto;
 import com.candall.estoque_db.services.ProdutoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,19 +23,18 @@ public class ProdutoController {
 
     private final ProdutoService produtoService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProdutoResponseDto> criar(@RequestParam String nome,
                                                     @RequestParam String categoria,
-                                                    @RequestParam String validade,
-                                                    @RequestParam Double preco,
+                                                    @RequestParam(value = "validade", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate validade,
+                                                    @RequestParam(value = "preco", required = false) BigDecimal preco,
                                                     @RequestParam Integer quantidade,
-                                                    @RequestParam Long ideCaixa,
+                                                    @RequestParam Long caixaId,
                                                     @RequestParam(value = "imagem") MultipartFile imagem) throws IOException {
 
-        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, LocalDate.parse(validade), BigDecimal.valueOf(preco), quantidade, ideCaixa);
+        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, validade, preco, quantidade, caixaId);
 
         ProdutoResponseDto response = produtoService.criar(dto, imagem);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -64,9 +64,16 @@ public class ProdutoController {
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProdutoResponseDto> atualizar(
-            @RequestParam Long id,
-            @RequestPart("produto") ProdutoRequestDto dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem) throws IOException {
+            @PathVariable Long id,
+            @RequestParam(value = "nome", required = false) String nome,
+            @RequestParam(value = "categoria", required = false) String categoria,
+            @RequestParam(value = "validade", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate validade,
+            @RequestParam(value = "preco", required = false) BigDecimal preco,
+            @RequestParam(value = "quantidade", required = false) Integer quantidade,
+            @RequestParam(value = "caixaId", required = false) Long caixaId,
+            @RequestParam(value = "imagem", required = false) MultipartFile imagem) throws IOException {
+
+        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, validade, preco, quantidade, caixaId);
 
         ProdutoResponseDto response = produtoService.atualizar(id, dto, imagem);
         return ResponseEntity.ok(response);

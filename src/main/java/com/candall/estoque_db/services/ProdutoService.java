@@ -1,5 +1,8 @@
 package com.candall.estoque_db.services;
 
+import com.candall.estoque_db.exceptions.FileStorageException;
+import com.candall.estoque_db.exceptions.ImageInvalidException;
+import com.candall.estoque_db.exceptions.ResourceNotFoundException;
 import com.candall.estoque_db.models.Caixa;
 import com.candall.estoque_db.models.Produto;
 import com.candall.estoque_db.models.dto.ProdutoRequestDto;
@@ -31,7 +34,7 @@ public class ProdutoService {
     @Transactional
     public ProdutoResponseDto criar(ProdutoRequestDto dto, MultipartFile imagem) throws IOException {
         Caixa caixa = caixaRepository.findById(dto.caixaId())
-                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrada e/ou não existe"));
+                                     .orElseThrow(() -> new ResourceNotFoundException("Caixa não encontrada e/ou não existe"));
 
         String imagemUrl = null;
         if (imagem != null && !imagem.isEmpty()) {
@@ -79,18 +82,18 @@ public class ProdutoService {
     @Transactional(readOnly = true)
     public ProdutoResponseDto buscarPorId(Long id) {
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
         return converterParaResponseDto(produto);
     }
 
     @Transactional
     public ProdutoResponseDto atualizar(Long id, ProdutoRequestDto dto, MultipartFile novaImagem) throws IOException {
         Produto produtoExistente = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         if (dto.caixaId() != null && !produtoExistente.getCaixa().getId().equals(dto.caixaId())) {
             Caixa novaCaixa = caixaRepository.findById(dto.caixaId())
-                    .orElseThrow(() -> new RuntimeException("Nova Caixa não encontrada"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Nova Caixa não encontrada"));
             produtoExistente.setCaixa(novaCaixa);
         }
 
@@ -127,7 +130,7 @@ public class ProdutoService {
     @Transactional
     public void deletar(Long id) {
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         deletarImagemLocal(produto.getImagemUrl());
         produtoRepository.delete(produto);
@@ -135,7 +138,7 @@ public class ProdutoService {
 
     private String salvarImagemLocal(MultipartFile imagem) throws IOException {
         if (imagem == null || imagem.isEmpty()) {
-            throw new IllegalArgumentException("O arquivo de imagem está vazio ou é inválido.");
+            throw new ImageInvalidException("O arquivo de imagem está vazio ou é inválido.");
         }
 
         File directory = new File(Upload);
@@ -160,7 +163,7 @@ public class ProdutoService {
 
                 Files.deleteIfExists(caminhoCompleto);
             } catch (IOException e) {
-                throw new RuntimeException("Falha ao deletar a imagem do disco local", e);
+                throw new FileStorageException("Falha ao deletar a imagem do disco local", e);
             }
         }
     }

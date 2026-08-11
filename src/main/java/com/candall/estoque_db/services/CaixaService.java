@@ -1,5 +1,7 @@
 package com.candall.estoque_db.services;
 
+import com.candall.estoque_db.exceptions.ResourceAlreadyExistsException;
+import com.candall.estoque_db.exceptions.ResourceNotFoundException;
 import com.candall.estoque_db.models.Caixa;
 import com.candall.estoque_db.models.dto.CaixaRequestDto;
 import com.candall.estoque_db.models.dto.CaixaResponseDto;
@@ -20,7 +22,7 @@ public class CaixaService {
     @Transactional
     public CaixaResponseDto criar(CaixaRequestDto dto){
         if(caixaRepository.existsByCodigoCaixa(dto.codigoCaixa())){
-            throw new RuntimeException("Codigo de caixa já existe");
+            throw new ResourceAlreadyExistsException("Código de caixa " + dto.codigoCaixa() + " já existe.");
         }
 
         Caixa caixa = Caixa.builder().codigoCaixa(dto.codigoCaixa()).build();
@@ -41,7 +43,7 @@ public class CaixaService {
     public CaixaResponseDto buscarPorId(Long id) {
 
         Caixa caixa = caixaRepository.findById(id)
-                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrado com o ID: " + id));
+                                     .orElseThrow(() -> new ResourceNotFoundException("A caixa com esse nome/ID " + id + " não existe."));
 
         return converterParaResponse(caixa);
     }
@@ -50,10 +52,10 @@ public class CaixaService {
     public void deletar(Long id) {
 
         Caixa caixa = caixaRepository.findById(id)
-                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
+                                     .orElseThrow(() -> new ResourceNotFoundException("Não existe uma caixa com esse nome/ID " + id + " para deletar."));
 
         if (caixa.getProdutos() != null && !caixa.getProdutos().isEmpty()) {
-            throw new RuntimeException("Não é possível deletar um caixa que possui produtos");
+            throw new ResourceAlreadyExistsException("Não é possível deletar uma caixa que possui produtos");
         }
 
         caixaRepository.delete(caixa);
@@ -63,12 +65,12 @@ public class CaixaService {
     public CaixaResponseDto atualizarCodigo(Long id, CaixaRequestDto dto) {
 
         Caixa caixa = caixaRepository.findById(id)
-                                     .orElseThrow(() -> new RuntimeException("Caixa não encontrado"));
+                                     .orElseThrow(() -> new ResourceNotFoundException("Caixa não encontrada"));
 
         if (!caixa.getCodigoCaixa().equals(dto.codigoCaixa()) &&
                 caixaRepository.existsByCodigoCaixa(dto.codigoCaixa())) {
 
-            throw new RuntimeException("Código de caixa já existe");
+            throw new ResourceAlreadyExistsException("O código " + id + " já existe");
         }
 
         caixa.setCodigoCaixa(dto.codigoCaixa());

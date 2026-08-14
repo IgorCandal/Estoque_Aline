@@ -1,0 +1,48 @@
+<nav th:fragment="navegacao" class="custom-navbar">
+    <!-- Estilo embutido no fragmento para que ele funcione automaticamente em qualquer página que o chame -->
+    <style>
+        .custom-navbar {
+            background-color: #212529;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 0;
+        }
+        .nav-container {
+            max-width: 700px; /* Alinhado perfeitamente com o tamanho do container de Caixas */
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-brand {
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-item {
+            color: #fff;
+            text-decoration: none;
+            padding: 0.5rem;
+            font-size: 1rem;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+        }
+        .nav-item:hover {
+            opacity: 1;
+        }
+    </style>
+
+    <div class="nav-container">
+        <a class="nav-brand" th:href="@{/produtos}">🛒 Sistema Aline Estoque</a>
+        <div class="nav-links">
+            <a class="nav-item" th:href="@{/produtos}">📦 Produtos</a>
+            <a class="nav-item" th:href="@{/caixas}">📥 Caixas</a>
+        </div>
+    </div>
+</nav>

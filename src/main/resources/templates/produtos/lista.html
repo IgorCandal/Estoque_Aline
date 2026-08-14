@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Estoque - Produtos</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #212529;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+        .btn-dark {
+            background-color: #212529;
+            color: white;
+            border-color: #212529;
+        }
+        .btn-outline-dark {
+            border-color: #212529;
+            color: #212529;
+            background: transparent;
+        }
+        .btn-outline-dark:hover {
+            background-color: #212529;
+            color: white;
+        }
+        .btn-outline-warning {
+            border-color: #ffc107;
+            color: #856404;
+            background: transparent;
+        }
+        .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-outline-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+            background: transparent;
+        }
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .card-body {
+            padding: 1rem;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .filter-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .table th, .table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .table thead {
+            background-color: #212529;
+            color: white;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+        .text-end {
+            text-align: right;
+        }
+        .text-success {
+            color: #198754;
+        }
+        .fw-bold {
+            font-weight: bold;
+        }
+        .img-thumb {
+            border-radius: 0.25rem;
+            border: 1px solid #dee2e6;
+            object-fit: cover;
+        }
+        .img-placeholder {
+            width: 70px;
+            height: 70px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+            background-color: #6c757d;
+            border-radius: 0.375rem;
+        }
+        .actions-cell {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.25rem;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1050;
+        }
+        .modal-conteudo {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: abrirSuave 0.2s ease-out;
+        }
+        .modal-botoes {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .btn-cancelar {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+        }
+        .btn-cancelar:hover {
+            background-color: #5a6268;
+        }
+        .btn-excluir {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+        .btn-excluir:hover {
+            background-color: #bb2d3b;
+        }
+        @keyframes abrirSuave {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-detalhes {
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .detalhe-titulo {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .detalhe-imagem-container {
+            width: 100%;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .detalhe-imagem {
+            max-width: 100%;
+            max-height: 350px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 0.375rem;
+            display: none;
+        }
+
+        .detalhe-placeholder {
+            width: 150px;
+            height: 150px;
+            font-size: 4rem;
+        }
+
+        .detalhes-produto {
+            border-top: 1px solid #dee2e6;
+        }
+
+        .detalhe-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .detalhe-item span {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .detalhe-item strong {
+            text-align: right;
+        }
+
+        .detalhe-total {
+            font-size: 1.1rem;
+            border-bottom: none;
+        }
+
+        .detalhe-fechar {
+            margin-top: 1rem;
+        }
+
+        .detalhe-fechar .btn {
+            width: 100%;
+        }
+
+        @media (max-width: 576px) {
+            .modal-detalhes {
+                padding: 1.25rem;
+            }
+
+            .detalhe-imagem-container {
+                min-height: 220px;
+            }
+
+            .detalhe-imagem {
+                max-height: 250px;
+            }
+
+            .detalhe-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+
+            .detalhe-item strong {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragmentos/menu :: navegacao}"></div>
+
+<div class="container">
+    <div class="header-actions">
+        <h2 class="title">📦 Lista de Mercadorias</h2>
+        <a th:href="@{/produtos/novo}" class="btn btn-primary">+ Adicionar Produto</a>
+    </div>
+
+    <div class="card card-body">
+        <div class="filter-group">
+            <span class="filter-label">Filtros:</span>
+            <a th:href="@{/produtos(filtro='nome')}" th:classappend="${filtroAtual == 'nome'} ? 'btn-dark' : 'btn-outline-dark'" class="btn btn-sm">Nome</a>
+            <a th:href="@{/produtos(filtro='quantidade')}" th:classappend="${filtroAtual == 'quantidade'} ? 'btn-dark' : 'btn-outline-dark'" class="btn btn-sm">Estoque</a>
+            <a th:href="@{/produtos(filtro='validade')}" th:classappend="${filtroAtual == 'validade'} ? 'btn-dark' : 'btn-outline-dark'" class="btn btn-sm">Validade</a>
+        </div>
+    </div>
+
+    <div class="card table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Imagem</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Validade</th>
+                <th>Preço</th>
+                <th>Qtd</th>
+                <th>Total</th>
+                <th class="text-end" style="padding-right: 1.5rem;">Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${produtos}">
+                <td>
+                    <a href="#"
+                       class="produto-imagem-link"
+                       th:data-nome="${p.nome}"
+                       th:data-categoria="${p.categoria}"
+                       th:data-validade="${p.validade != null ? #temporals.format(p.validade, 'dd/MM/yyyy') : 'N/A'}"
+                       th:data-preco="${p.preco}"
+                       th:data-quantidade="${p.quantidade}"
+                       th:data-total="${p.precoTotal}"
+                       th:data-imagem="${p.imagemUrl}"
+                       onclick="abrirModalDetalhes(this); return false;"
+                       style="cursor:pointer; display:inline-block;">
+
+                        <img th:if="${not #strings.isEmpty(p.imagemUrl)}"
+                             th:src="${p.imagemUrl}"
+                             class="img-thumb"
+                             width="70"
+                             height="70"
+                             alt="Imagem do produto">
+
+                        <div th:unless="${not #strings.isEmpty(p.imagemUrl)}"
+                             class="img-placeholder">
+                            📦
+                        </div>
+                    </a>
+                </td>
+                <td class="fw-bold" th:text="${p.nome}"></td>
+                <td><span class="badge" th:text="${p.categoria}"></span></td>
+                <td th:text="${p.validade != null ? #temporals.format(p.validade, 'dd/MM/yyyy') : 'N/A'}"></td>
+                <td th:text="'R$ ' + ${p.preco}"></td>
+                <td th:text="${p.quantidade}"></td>
+                <td class="text-success fw-bold" th:text="'R$ ' + ${p.precoTotal}"></td>
+                <td class="text-end" style="padding-right: 1.5rem;">
+                    <div class="actions-cell">
+                        <a th:href="@{/produtos/editar/{id}(id=${p.id})}" class="btn btn-sm btn-outline-warning">✏️</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" th:onclick="'abrirModal(' + ${p.id} + ')'">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(produtos)}">
+                <td colspan="8" class="text-center" style="padding: 2rem; color: #6c757d;">
+                    Nenhuma mercadoria encontrada no estoque.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="meuModal" class="modal-overlay" style="display: none;">
+        <div class="modal-conteudo">
+            <h3>Excluir Produto?</h3>
+            <p>Você realmente deseja remover este item do estoque?</p>
+            <div class="modal-botoes">
+                <button type="button" onclick="fecharModal()" class="btn btn-cancelar">Cancelar</button>
+                <a id="btnConfirmarExclusao" href="#" class="btn btn-excluir">Excluir</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalDetalhes" class="modal-overlay" style="display: none;">
+        <div class="modal-conteudo modal-detalhes">
+
+            <h3 id="detalheTitulo" class="detalhe-titulo">
+                Detalhes do Produto
+            </h3>
+
+            <div class="detalhe-imagem-container">
+                <img id="detalheImagem"
+                     src=""
+                     class="detalhe-imagem"
+                     alt="Imagem do produto">
+
+                <div id="detalhePlaceholder"
+                     class="img-placeholder detalhe-placeholder">
+                    📦
+                </div>
+            </div>
+
+            <div class="detalhes-produto">
+
+                <div class="detalhe-item">
+                    <span>Categoria</span>
+                    <strong id="detalheCategoria"></strong>
+                </div>
+
+                <div class="detalhe-item">
+                    <span>Validade</span>
+                    <strong id="detalheValidade"></strong>
+                </div>
+
+                <div class="detalhe-item">
+                    <span>Preço Unitário</span>
+                    <strong id="detalhePreco" class="text-success"></strong>
+                </div>
+
+                <div class="detalhe-item">
+                    <span>Quantidade</span>
+                    <strong id="detalheQuantidade"></strong>
+                </div>
+
+                <div class="detalhe-item detalhe-total">
+                    <span>Valor Total</span>
+                    <strong id="detalheTotal" class="text-success"></strong>
+                </div>
+
+            </div>
+
+            <div class="detalhe-fechar">
+                <button type="button"
+                        onclick="fecharModalDetalhes()"
+                        class="btn btn-dark">
+                    Fechar Visualização
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+
+<script>
+    function abrirModal(id) {
+        document.getElementById('btnConfirmarExclusao').href = '/produtos/deletar/' + id;
+        document.getElementById('meuModal').style.display = 'flex';
+    }
+
+    function fecharModal() {
+        document.getElementById('meuModal').style.display = 'none';
+    }
+
+    function abrirModalDetalhes(elemento) {
+
+        const nome = elemento.dataset.nome;
+        const categoria = elemento.dataset.categoria;
+        const validade = elemento.dataset.validade;
+        const preco = elemento.dataset.preco;
+        const quantidade = elemento.dataset.quantidade;
+        const total = elemento.dataset.total;
+        const imagemUrl = elemento.dataset.imagem;
+
+        document.getElementById('detalheTitulo').innerText = nome;
+        document.getElementById('detalheCategoria').innerText = categoria;
+        document.getElementById('detalheValidade').innerText = validade;
+        document.getElementById('detalhePreco').innerText = 'R$ ' + preco;
+        document.getElementById('detalheQuantidade').innerText = quantidade;
+        document.getElementById('detalheTotal').innerText = 'R$ ' + total;
+
+        const imgElement = document.getElementById('detalheImagem');
+        const placeholderElement = document.getElementById('detalhePlaceholder');
+
+        if (imagemUrl && imagemUrl.trim() !== '' && imagemUrl !== 'null') {
+
+            imgElement.src = imagemUrl;
+            imgElement.style.display = 'block';
+            placeholderElement.style.display = 'none';
+
+        } else {
+
+            imgElement.src = '';
+            imgElement.style.display = 'none';
+            placeholderElement.style.display = 'flex';
+        }
+
+        document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function fecharModalDetalhes() {
+        document.getElementById('modalDetalhes').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const modalExcluir = document.getElementById('meuModal');
+        const modalDetalhes = document.getElementById('modalDetalhes');
+
+        if (event.target === modalExcluir) {
+            fecharModal();
+        }
+        if (event.target === modalDetalhes) {
+            fecharModalDetalhes();
+        }
+    }
+</script>
+</div>
+</body>
+</html>

@@ -1,5 +1,16 @@
 package com.candall.estoque_db.services;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.candall.estoque_db.exceptions.FileStorageException;
 import com.candall.estoque_db.exceptions.ImageInvalidException;
 import com.candall.estoque_db.exceptions.ResourceNotFoundException;
@@ -9,17 +20,8 @@ import com.candall.estoque_db.models.dto.ProdutoRequestDto;
 import com.candall.estoque_db.models.dto.ProdutoResponseDto;
 import com.candall.estoque_db.repositories.CaixaRepository;
 import com.candall.estoque_db.repositories.ProdutoRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +30,8 @@ public class ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final CaixaRepository caixaRepository;
 
-    private final String Upload = "uploads/";
-    private final String Base_URL = "http://localhost:8080/uploads/";
+    private final String Upload = "C:/estoque-uploads/";
+    private final String Base_URL = "http://localhost:8080/imagens/";
 
     @Transactional
     public ProdutoResponseDto criar(ProdutoRequestDto dto, MultipartFile imagem) throws IOException {
@@ -170,6 +172,7 @@ public class ProdutoService {
 
     private ProdutoResponseDto converterParaResponseDto(Produto produto) {
         return new ProdutoResponseDto(
+                produto.getId(),
                 produto.getNome(),
                 produto.getCategoria(),
                 produto.getValidade(),

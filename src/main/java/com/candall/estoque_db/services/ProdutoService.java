@@ -34,7 +34,7 @@ public class ProdutoService {
     @Transactional
     public ProdutoResponseDto criar(ProdutoRequestDto dto, MultipartFile imagem) throws IOException {
         Caixa caixa = caixaRepository.findById(dto.caixaId())
-                                     .orElseThrow(() -> new ResourceNotFoundException("Caixa não encontrada e/ou não existe"));
+                                     .orElseThrow(() -> new ResourceNotFoundException("Caixa não existe"));
 
         String imagemUrl = null;
         if (imagem != null && !imagem.isEmpty()) {

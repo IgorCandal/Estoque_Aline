@@ -30,7 +30,7 @@ public class ProdutoController {
                                                     @RequestParam(value = "preco", required = false) BigDecimal preco,
                                                     @RequestParam Integer quantidade,
                                                     @RequestParam Long caixaId,
-                                                    @RequestParam(value = "imagem") MultipartFile imagem) throws IOException {
+                                                    @RequestParam(value = "imagem", required = false) MultipartFile imagem) throws IOException {
 
         ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, validade, preco, quantidade, caixaId);
 

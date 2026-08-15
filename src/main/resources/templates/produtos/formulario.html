@@ -127,6 +127,10 @@
         <div class="card-body">
 
             <form th:action="@{/produtos/salvar}" method="POST" enctype="multipart/form-data">
+
+                <!-- AJUSTE 1: Campo oculto que envia a caixa de origem para o Controller ao salvar -->
+                <input type="hidden" name="caixaIdAtual" th:value="${caixaIdAtual}">
+
                 <!-- Controle de ID para Edição -->
                 <input type="hidden" name="id" th:value="${produto != null ? produto.id : null}">
 
@@ -160,13 +164,23 @@
                     </div>
                     <div>
                         <label class="form-label">Vincular ao Caixa</label>
-                        <select name="caixaId" class="form-select" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option th:each="cx : ${caixas}"
-                                    th:value="${cx.id}"
-                                    th:text="${cx.codigoCaixa}"
-                                    th:selected="${produto != null && produto.caixaId == cx.id}"></option>
-                        </select>
+
+                        <!-- MUDANÇA: Se for CADASTRO NOVO vindo de uma caixa, exibe o campo cinza e bloqueado -->
+                        <div th:if="${caixaIdAtual != null && produto == null}">
+                            <input type="hidden" name="caixaId" th:value="${caixaIdAtual}">
+                            <input type="text" th:value="${nomeCaixaOrigem}" class="form-control" style="background-color: #e9ecef; cursor: not-allowed;" readonly>
+                        </div>
+
+                        <!-- MUDANÇA: Se for LISTA GERAL ou EDIÇÃO, libera a caixa de seleção original para escolha -->
+                        <div th:unless="${caixaIdAtual != null && produto == null}">
+                            <select name="caixaId" class="form-select" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option th:each="cx : ${caixas}"
+                                        th:value="${cx.id}"
+                                        th:text="${cx.codigoCaixa}"
+                                        th:selected="${produto != null && produto.caixaId == cx.id}"></option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -176,7 +190,8 @@
                 </div>
 
                 <div class="form-footer">
-                    <a th:href="@{/produtos}" class="btn btn-outline-secondary">Cancelar</a>
+                    <!-- AJUSTE 2: Se clicar em cancelar, também mantém o filtro da caixa de origem na URL -->
+                    <a th:href="${caixaIdAtual != null} ? @{/produtos(caixaId=${caixaIdAtual})} : @{/produtos}" class="btn btn-outline-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-success">Confirmar e Salvar</button>
                 </div>
             </form>

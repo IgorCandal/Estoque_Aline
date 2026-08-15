@@ -79,6 +79,7 @@ public class CaixaService {
     }
 
     private CaixaResponseDto converterParaResponse(Caixa caixa){
-        return new CaixaResponseDto(caixa.getId(), caixa.getCodigoCaixa());
+        int totalProdutos = (caixa.getProdutos() != null) ? caixa.getProdutos().size() : 0;
+        return new CaixaResponseDto(caixa.getId(), caixa.getCodigoCaixa(), totalProdutos);
     }
 }

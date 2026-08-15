@@ -22,48 +22,86 @@ public class ProdutoViewController {
     private final CaixaService caixaService;
 
     @GetMapping
-    public String listar(Model model, @RequestParam(value = "filtro", defaultValue = "nome") String filtro) {
-        List<ProdutoResponseDto> produtos = switch (filtro) {
-            case "validade" -> produtoService.listarPorValidadeCrescente();
-            case "quantidade" -> produtoService.listarPorQuantidadeDecrescente();
-            default -> produtoService.listarPorNomeCrescente();
-        };
+    public String listar(Model model,
+                         @RequestParam(value = "filtro", defaultValue = "nome") String filtro,
+                         @RequestParam(value = "caixaId", required = false) Long caixaId) {
+
+        List<ProdutoResponseDto> produtos;
+        if (caixaId != null) {
+            produtos = produtoService.listarPorCaixa(caixaId);
+
+            produtos = switch (filtro) {
+                case "validade" -> produtoService.ordenarPorValidade(produtos);
+                case "quantidade" -> produtoService.ordenarPorQuantidade(produtos);
+                default -> produtoService.ordenarPorNome(produtos);
+            };
+            var caixaAtual = caixaService.buscarPorId(caixaId);
+            model.addAttribute("nomeCaixaAtual", caixaAtual.codigoCaixa());
+        } else {
+            produtos = switch (filtro) {
+                case "validade" -> produtoService.listarPorValidadeCrescente();
+                case "quantidade" -> produtoService.listarPorQuantidadeDecrescente();
+                default -> produtoService.listarPorNomeCrescente();
+            };
+        }
 
         model.addAttribute("produtos", produtos);
         model.addAttribute("filtroAtual", filtro);
+        model.addAttribute("caixaIdAtual", caixaId);
+        model.addAttribute("todasCaixas", caixaService.listarTodos());
+
         return "produtos/lista";
     }
 
     @GetMapping("/novo")
-    public String novoForm(Model model) {
+    public String novoForm(@RequestParam(value = "caixaIdAtual", required = false) Long caixaIdAtual, Model model) {
         model.addAttribute("caixas", caixaService.listarTodos());
+        model.addAttribute("caixaIdAtual", caixaIdAtual);
+        if (caixaIdAtual != null) {
+            var caixaOrigem = caixaService.buscarPorId(caixaIdAtual);
+            model.addAttribute("nomeCaixaOrigem", caixaOrigem.codigoCaixa());
+        }
         return "produtos/formulario";
     }
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute ProdutoRequestDto dto,
                          @RequestParam(value = "id", required = false) Long id,
-                         @RequestParam(value = "imagemFile", required = false) MultipartFile imagemFile) throws IOException {
+                         @RequestParam(value = "imagemFile", required = false) MultipartFile imagemFile,
+                         @RequestParam(value = "caixaIdAtual", required = false) Long caixaIdAtual) throws IOException {
+
         if (id != null) {
             produtoService.atualizar(id, dto, imagemFile);
         } else {
             produtoService.criar(dto, imagemFile);
         }
+
+        if (caixaIdAtual != null) {
+            return "redirect:/produtos?caixaId=" + caixaIdAtual;
+        }
         return "redirect:/produtos";
     }
 
     @GetMapping("/editar/{id}")
-    public String editarForm(@PathVariable Long id, Model model) {
+    public String editarForm(@PathVariable Long id,
+                             @RequestParam(value = "caixaIdAtual", required = false) Long caixaIdAtual,
+                             Model model) {
         ProdutoResponseDto response = produtoService.buscarPorId(id);
         model.addAttribute("produto", response);
         model.addAttribute("caixas", caixaService.listarTodos());
+        model.addAttribute("caixaIdAtual", caixaIdAtual);
         return "produtos/formulario";
     }
 
     @GetMapping("/deletar/{id}")
-    public String deletar(@PathVariable Long id) {
+    public String deletar(@PathVariable Long id,
+                          @RequestParam(value = "caixaIdAtual", required = false) Long caixaIdAtual) {
+
         produtoService.deletar(id);
+
+        if (caixaIdAtual != null) {
+            return "redirect:/produtos?caixaId=" + caixaIdAtual;
+        }
         return "redirect:/produtos";
     }
-
 }

@@ -36,7 +36,7 @@ public class ProdutoService {
     @Transactional
     public ProdutoResponseDto criar(ProdutoRequestDto dto, MultipartFile imagem) throws IOException {
         Caixa caixa = caixaRepository.findById(dto.caixaId())
-                                     .orElseThrow(() -> new ResourceNotFoundException("Caixa não existe"));
+                .orElseThrow(() -> new ResourceNotFoundException("Caixa não existe"));
 
         String imagemUrl = null;
         if (imagem != null && !imagem.isEmpty()) {
@@ -44,14 +44,14 @@ public class ProdutoService {
         }
 
         Produto produto = Produto.builder()
-                                 .nome(dto.nome())
-                                 .categoria(dto.categoria())
-                                 .validade(dto.validade())
-                                 .preco(dto.preco())
-                                 .quantidade(dto.quantidade())
-                                 .imagemUrl(imagemUrl)
-                                 .caixa(caixa)
-                                 .build();
+                .nome(dto.nome())
+                .categoria(dto.categoria())
+                .validade(dto.validade())
+                .preco(dto.preco())
+                .quantidade(dto.quantidade())
+                .imagemUrl(imagemUrl)
+                .caixa(caixa)
+                .build();
 
         Produto produtoSalvo = produtoRepository.save(produto);
         return converterParaResponseDto(produtoSalvo);
@@ -76,6 +76,14 @@ public class ProdutoService {
     @Transactional(readOnly = true)
     public List<ProdutoResponseDto> listarPorNomeCrescente() {
         return produtoRepository.findAllByOrderByNomeAsc()
+                .stream()
+                .map(this::converterParaResponseDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProdutoResponseDto> listarPorCaixa(Long caixaId) {
+        return produtoRepository.findByCaixaId(caixaId)
                 .stream()
                 .map(this::converterParaResponseDto)
                 .toList();
@@ -138,6 +146,28 @@ public class ProdutoService {
         produtoRepository.delete(produto);
     }
 
+    public List<ProdutoResponseDto> ordenarPorNome(List<ProdutoResponseDto> lista) {
+        return lista.stream()
+                .sorted((p1, p2) -> p1.nome().compareToIgnoreCase(p2.nome()))
+                .toList();
+    }
+
+    public List<ProdutoResponseDto> ordenarPorQuantidade(List<ProdutoResponseDto> lista) {
+        return lista.stream()
+                .sorted((p1, p2) -> Integer.compare(p2.quantidade(), p1.quantidade()))
+                .toList();
+    }
+
+    public List<ProdutoResponseDto> ordenarPorValidade(List<ProdutoResponseDto> lista) {
+        return lista.stream()
+                .sorted((p1, p2) -> {
+                    if (p1.validade() == null) return 1;
+                    if (p2.validade() == null) return -1;
+                    return p1.validade().compareTo(p2.validade());
+                })
+                .toList();
+    }
+
     private String salvarImagemLocal(MultipartFile imagem) throws IOException {
         if (imagem == null || imagem.isEmpty()) {
             throw new ImageInvalidException("O arquivo de imagem está vazio ou é inválido.");
@@ -180,7 +210,7 @@ public class ProdutoService {
                 produto.getPreco(),
                 produto.getQuantidade(),
                 produto.getPrecoTotal(),
-                produto.getCaixa().getId()
+                produto.getCaixa() != null ? produto.getCaixa().getId() : null
         );
     }
 }

@@ -47,7 +47,6 @@
         .btn-success:hover { background-color: #157347; }
         .btn-outline-danger { border-color: #dc3545; color: #dc3545; background: transparent; }
         .btn-outline-danger:hover { background-color: #dc3545; color: white; }
-        /* AJUSTE: Cor do botão de edição */
         .btn-outline-warning { border-color: #ffc107; color: #b58100; background: transparent; margin-right: 0.25rem; }
         .btn-outline-warning:hover { background-color: #ffc107; color: black; }
         .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
@@ -67,11 +66,13 @@
         .table th, .table td {
             padding: 0.75rem 1rem;
             border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
         }
         .table thead { background-color: #212529; color: white; }
         .table-hover tbody tr:hover { background-color: rgba(0, 0, 0, 0.075); }
         .text-end { text-align: right; }
-        
+        .text-center { text-align: center; }
+
         /* Emblema (Badge) */
         .badge {
             display: inline-block;
@@ -122,7 +123,7 @@
             padding: 1rem;
             border-top: 1px solid #dee2e6;
         }
-        
+
         /* Formulários */
         .form-label { display: block; font-weight: bold; margin-bottom: 0.5rem; }
         .form-control {
@@ -137,78 +138,126 @@
 </head>
 <body>
 
-    <div th:replace="~{fragmentos/menu :: navegacao}"></div>
+<div th:replace="~{fragmentos/menu :: navegacao}"></div>
 
-    <div class="container">
-        <div class="header-actions">
-            <h2 class="title">🗃️ Local de Armazenamento</h2>
-            <button class="btn btn-primary" popovertarget="modalCaixa">+ Nova Caixa</button>
-        </div>
+<div class="container">
+    <div class="header-actions">
+        <h2 class="title">🗃️ Local de Armazenamento</h2>
+        <button class="btn btn-primary" popovertarget="modalCaixa">+ Nova Caixa</button>
+    </div>
 
-        <div class="card">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th style="padding-left: 1.5rem;">ID</th>
-                        <th>Código Único da Caixa</th>
-                        <th class="text-end" style="padding-right: 1.5rem;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="c : ${caixas}">
-                        <td style="padding-left: 1.5rem; font-weight: bold;" th:text="${c.id}"></td>
-                        <td><span class="badge" th:text="${c.codigoCaixa}"></span></td>
-                        <td class="text-end" style="padding-right: 1.5rem;">
-                            <!-- MUDANÇA 1: Botão Editar dinâmico que abre o modal específico da linha -->
-                            <button class="btn btn-sm btn-outline-warning" th:popovertarget="'modalEditar' + ${c.id}">✏️</button>
-                            
-                            <a th:href="@{/caixas/deletar/{id}(id=${c.id})}" class="btn btn-sm btn-outline-danger" 
-                               onclick="return confirm('Deletar este caixa removerá todos os produtos dele! Continuar?')">🗑️</a>
+    <!-- Banners de Alertas -->
+    <div th:if="${mensagemErro}" class="alert" style="background-color: #f8d7da; border: 1px solid #f5c2c7; color: #842029;">
+        <span>⚠️</span>
+        <span th:text="${mensagemErro}"></span>
+    </div>
 
-                            <!-- MUDANÇA 2: Modal de Edição embutido no loop para carregar os valores corretos -->
-                            <div popover th:id="'modalEditar' + ${c.id}">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Renomear Caixa</h5>
-                                    <button type="button" class="btn-close" th:popovertarget="'modalEditar' + ${c.id}" popovertargetaction="hide">×</button>
-                                </div>
-                                <!-- Envia para a rota POST /caixas/editar/{id} mapeada no seu CaixaViewController -->
-                                <form th:action="@{/caixas/editar/{id}(id=${c.id})}" method="POST">
-                                    <div class="modal-body" style="text-align: left;">
-                                        <label class="form-label">Novo Código do Caixa</label>
-                                        <!-- O value já carrega o código atual da caixa automaticamente -->
-                                        <input type="text" name="codigoCaixa" th:value="${c.codigoCaixa}" class="form-control" required>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" th:popovertarget="'modalEditar' + ${c.id}" popovertargetaction="hide">Fechar</button>
-                                        <button type="submit" class="btn btn-success">Salvar Alteração</button>
-                                    </div>
-                                </form>
+    <div th:if="${mensagemSucesso}" class="alert" style="background-color: #d1e7dd; border: 1px solid #badbcc; color: #0f5132;">
+        <span>✅</span>
+        <span th:text="${mensagemSucesso}"></span>
+    </div>
+
+    <div class="card">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th style="padding-left: 1.5rem;">Nome da Caixa</th>
+                <th class="text-center">Total de Produtos</th>
+                <th class="text-end" style="padding-right: 1.5rem;">Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${caixas}">
+                <td style="padding-left: 1.5rem; font-weight: bold;">
+                    <a th:href="@{/produtos(caixaId=${c.id})}"
+                       th:text="${c.codigoCaixa}"
+                       style="color: inherit; text-decoration: none; cursor: pointer;"
+                       onmouseover="this.style.textDecoration='underline'"
+                       onmouseout="this.style.textDecoration='none'">
+                    </a>
+                </td>
+
+                <td class="text-center" th:text="${c.quantidadeProdutos}">0</td>
+
+                <td class="text-end" style="padding-right: 1.5rem;">
+                    <button class="btn btn-sm btn-outline-warning" th:popovertarget="'modalEditar' + ${c.id}">✏️</button>
+
+                    <button class="btn btn-sm btn-outline-danger" th:popovertarget="'modalDeletar' + ${c.id}">🗑️</button>
+
+                    <div popover th:id="'modalDeletar' + ${c.id}">
+                        <div class="modal-header" style="background-color: #dc3545;">
+                            <h5 class="modal-title">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" th:popovertarget="'modalDeletar' + ${c.id}" popovertargetaction="hide">×</button>
+                        </div>
+                        <div class="modal-body" style="text-align: left; padding: 1.5rem;">
+                            <p style="margin: 0; font-size: 1rem;">
+                                Deseja realmente deletar <strong><span th:text="${c.codigoCaixa}"></span></strong>?
+                            </p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #dc3545; font-weight: bold;">
+                                ⚠️ Atenção: A Caixa precisa estar vazia para poder Excluir.
+                            </p>
+                        </div>
+                        <div class="modal-footer" style="background-color: #f8f9fa;">
+                            <button type="button" class="btn btn-secondary" th:popovertarget="'modalDeletar' + ${c.id}" popovertargetaction="hide">Cancelar</button>
+                            <a th:href="@{/caixas/deletar/{id}(id=${c.id})}" class="btn btn-danger" style="background-color: #dc3545; color: white;">Excluir Permanentemente</a>
+                        </div>
+                    </div>
+
+                    <div popover th:id="'modalEditar' + ${c.id}">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Renomear Caixa</h5>
+                            <button type="button" class="btn-close" th:popovertarget="'modalEditar' + ${c.id}" popovertargetaction="hide">×</button>
+                        </div>
+                        <form th:action="@{/caixas/editar/{id}(id=${c.id})}" method="POST">
+                            <div class="modal-body" style="text-align: left;">
+                                <label class="form-label">Novo Código do Caixa</label>
+                                <input type="text" name="codigoCaixa" th:value="${c.codigoCaixa}" class="form-control" required>
                             </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" th:popovertarget="'modalEditar' + ${c.id}" popovertargetaction="hide">Fechar</button>
+                                <button type="submit" class="btn btn-success">Salvar Alteração</button>
+                            </div>
+                        </form>
+                    </div>
 
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
+</div>
 
-    <!-- MODAL POPUP PARA NOVA CAIXA -->
-    <div popover id="modalCaixa">
-        <div class="modal-header">
-            <h5 class="modal-title">Novo Caixa</h5>
-            <button type="button" class="btn-close" popovertarget="modalCaixa" popovertargetaction="hide">×</button>
-        </div>
-        <form th:action="@{/caixas/salvar}" method="POST">
-            <div class="modal-body">
-                <label class="form-label">Código do Caixa Identificador</label>
-                <input type="text" name="codigoCaixa" class="form-control" required placeholder="Ex: CX-REFRIGERADOS">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" popovertarget="modalCaixa" popovertargetaction="hide">Fechar</button>
-                <button type="submit" class="btn btn-success">Salvar Caixa</button>
-            </div>
-        </form>
+<div popover id="modalCaixa">
+    <div class="modal-header">
+        <h5 class="modal-title">Novo Caixa</h5>
+        <button type="button" class="btn-close" popovertarget="modalCaixa" popovertargetaction="hide">×</button>
     </div>
+    <form th:action="@{/caixas/salvar}" method="POST">
+        <div class="modal-body">
+            <label class="form-label">Código do Caixa</label>
+            <input type="text" name="codigoCaixa" class="form-control" placeholder="Ex: Caixa 4" required>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" popovertarget="modalCaixa" popovertargetaction="hide">Fechar</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Script dos alertas -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.remove();
+                }, 500);
+            }, 4000);
+        });
+    });
+</script>
 
 </body>
 </html>

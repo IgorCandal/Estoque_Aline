@@ -23,5 +23,7 @@ public record ProdutoResponseDto(
 
         BigDecimal precoTotal,
 
-        Long caixaId
+        Long caixaId,
+
+        String nomeCaixa
 ){}

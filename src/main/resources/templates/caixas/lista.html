@@ -2,6 +2,7 @@
 <html xmlns:th="http://thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Caixas</title>
     <style>
         body {
@@ -134,6 +135,145 @@
             border-radius: 0.375rem;
             box-sizing: border-box;
         }
+
+        /* ========================================================
+           ESTILO LISTA DE APLICATIVO PARA CELULAR
+           ======================================================== */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+                padding: 0 0.5rem;
+            }
+            .header-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+            .header-actions .btn {
+                justify-content: center;
+                width: 100%;
+            }
+
+            /* Remove estilos do card container na versão mobile */
+            .card {
+                background: transparent !important;
+                box-shadow: none !important;
+                border: none !important;
+                overflow: visible !important;
+            }
+
+            /* Oculta o cabeçalho preto original */
+            .table thead {
+                display: none !important;
+            }
+
+            /* Transforma a tabela em uma lista flexível */
+            .table, .table tbody {
+                display: block !important;
+                width: 100% !important;
+            }
+
+            /* Cada linha do banco vira um item flexível com posição relativa */
+            .table tr {
+                display: flex !important;
+                align-items: center !important;
+                width: 100% !important;
+                background-color: #ffffff !important;
+                border-bottom: 1px solid #e9ecef !important;
+                padding: 0.75rem 0.5rem !important;
+                box-sizing: border-box !important;
+                margin-bottom: 0 !important;
+                box-shadow: none !important;
+                border-top: none !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-radius: 0 !important;
+                min-height: 4.8rem !important;
+                position: relative !important;
+            }
+
+            /* Célula do Nome: Injeta o ícone e serve de base para o bloco central */
+            .table td:nth-child(1) {
+                display: flex !important;
+                align-items: center !important;
+                flex-grow: 1 !important;
+                text-align: left !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+
+            /* Cria dinamicamente o ícone de caixa grande à esquerda */
+            .table td:nth-child(1)::before {
+                content: "📦" !important;
+                font-size: 2.2rem !important;
+                margin-right: 0.85rem !important;
+                display: inline-block !important;
+            }
+
+            /* Estiliza o Nome da Caixa */
+            .table td:first-child a {
+                display: block !important;
+                font-size: 1.15rem !important;
+                font-weight: bold !important;
+                color: #212529 !important;
+            }
+
+            /* Célula da Quantidade: Joga o valor para baixo do Nome */
+            .table td:nth-child(2) {
+                display: block !important;
+                position: absolute !important;
+                margin-left: 3.2rem !important;
+                margin-top: 1.8rem !important;
+                font-size: 0.875rem !important;
+                color: #6c757d !important;
+                padding: 0 !important;
+                border: none !important;
+                text-align: left !important;
+            }
+
+            /* Adiciona o prefixo dinâmico "Quantidade: " antes do número */
+            .table td:nth-child(2)::before {
+                content: "Quantidade: " !important;
+                font-weight: normal !important;
+                color: #6c757d !important;
+            }
+
+            /* Célula de Ações: Joga os botões para a extremidade direita */
+            .table td:nth-child(3) {
+                display: flex !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                padding: 0 !important;
+                border: none !important;
+                margin-left: auto !important;
+            }
+
+            .table td.text-end {
+                width: auto !important;
+            }
+            .actions-cell {
+                display: flex !important;
+                gap: 0.5rem !important;
+            }
+
+            /* Ajusta os botões estilo app nativo (clean e espaçados) */
+            .table .btn-sm {
+                padding: 0.4rem 0.6rem !important;
+                font-size: 1.05rem !important;
+                border: 1px solid #dee2e6 !important;
+                background-color: #f8f9fa !important;
+                border-radius: 0.375rem !important;
+            }
+
+            /* Garante o ajuste perfeito do modal popover */
+            div[popover] {
+                width: 92% !important;
+                max-width: 92% !important;
+                margin: auto !important;
+                box-sizing: border-box !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -146,18 +286,19 @@
         <button class="btn btn-primary" popovertarget="modalCaixa">+ Nova Caixa</button>
     </div>
 
-    <!-- Banners de Alertas -->
-    <div th:if="${mensagemErro}" class="alert" style="background-color: #f8d7da; border: 1px solid #f5c2c7; color: #842029;">
+    <!-- Banners de Alertas Responsivos -->
+    <div th:if="${mensagemErro}" class="alert" style="background-color: #f8d7da; border: 1px solid #f5c2c7; color: #842029; padding: 0.75rem 1rem; border-radius: 0.375rem; margin-bottom: 1rem; display: flex; gap: 0.5rem; word-break: break-word;">
         <span>⚠️</span>
         <span th:text="${mensagemErro}"></span>
     </div>
 
-    <div th:if="${mensagemSucesso}" class="alert" style="background-color: #d1e7dd; border: 1px solid #badbcc; color: #0f5132;">
+    <div th:if="${mensagemSucesso}" class="alert" style="background-color: #d1e7dd; border: 1px solid #badbcc; color: #0f5132; padding: 0.75rem 1rem; border-radius: 0.375rem; margin-bottom: 1rem; display: flex; gap: 0.5rem; word-break: break-word;">
         <span>✅</span>
         <span th:text="${mensagemSucesso}"></span>
     </div>
 
-    <div class="card">
+    <!-- Container adicionado para scroll dinâmico da tabela em telas pequenas -->
+    <div class="card table-responsive">
         <table class="table table-hover">
             <thead>
             <tr>
@@ -179,7 +320,7 @@
 
                 <td class="text-center" th:text="${c.quantidadeProdutos}">0</td>
 
-                <td class="text-end" style="padding-right: 1.5rem;">
+                <td class="text-end" style="padding-right: 1.5rem; white-space: nowrap;">
                     <button class="btn btn-sm btn-outline-warning" th:popovertarget="'modalEditar' + ${c.id}">✏️</button>
 
                     <button class="btn btn-sm btn-outline-danger" th:popovertarget="'modalDeletar' + ${c.id}">🗑️</button>
@@ -189,7 +330,7 @@
                             <h5 class="modal-title">Confirmar Exclusão</h5>
                             <button type="button" class="btn-close" th:popovertarget="'modalDeletar' + ${c.id}" popovertargetaction="hide">×</button>
                         </div>
-                        <div class="modal-body" style="text-align: left; padding: 1.5rem;">
+                        <div class="modal-body" style="text-align: left; padding: 1.5rem; white-space: normal;">
                             <p style="margin: 0; font-size: 1rem;">
                                 Deseja realmente deletar <strong><span th:text="${c.codigoCaixa}"></span></strong>?
                             </p>
@@ -199,7 +340,7 @@
                         </div>
                         <div class="modal-footer" style="background-color: #f8f9fa;">
                             <button type="button" class="btn btn-secondary" th:popovertarget="'modalDeletar' + ${c.id}" popovertargetaction="hide">Cancelar</button>
-                            <a th:href="@{/caixas/deletar/{id}(id=${c.id})}" class="btn btn-danger" style="background-color: #dc3545; color: white;">Excluir Permanentemente</a>
+                            <a th:href="@{/caixas/deletar/{id}(id=${c.id})}" class="btn" style="background-color: #dc3545; color: white;">Excluir Permanentemente</a>
                         </div>
                     </div>
 
@@ -209,7 +350,7 @@
                             <button type="button" class="btn-close" th:popovertarget="'modalEditar' + ${c.id}" popovertargetaction="hide">×</button>
                         </div>
                         <form th:action="@{/caixas/editar/{id}(id=${c.id})}" method="POST">
-                            <div class="modal-body" style="text-align: left;">
+                            <div class="modal-body" style="text-align: left; white-space: normal;">
                                 <label class="form-label">Novo Código do Caixa</label>
                                 <input type="text" name="codigoCaixa" th:value="${c.codigoCaixa}" class="form-control" required>
                             </div>
@@ -249,6 +390,8 @@
     document.addEventListener("DOMContentLoaded", function() {
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(function(alert) {
+            alert.style.transition = 'opacity 0.5s ease';
+
             setTimeout(function() {
                 alert.style.opacity = '0';
                 setTimeout(function() {

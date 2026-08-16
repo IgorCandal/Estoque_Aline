@@ -2,6 +2,7 @@
 <html xmlns:th="http://thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulário de Produto</title>
     <!-- Estilização Customizada do Formulário -->
     <style>
@@ -17,7 +18,7 @@
             margin: 2rem auto;
             padding: 0 1rem;
         }
-        
+
         /* Cartão (Card) */
         .card {
             background-color: white;
@@ -48,12 +49,6 @@
             gap: 1rem;
             margin-bottom: 1.25rem;
         }
-        /* Ajuste para telas pequenas (Celulares) */
-        @media (max-width: 576px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
 
         /* Elementos de Entrada (Inputs/Selects) */
         .form-label {
@@ -63,7 +58,7 @@
         }
         .form-control, .form-select {
             width: 100%;
-            padding: 0.375rem 0.75rem;
+            padding: 0.45rem 0.75rem;
             font-size: 1rem;
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
@@ -89,7 +84,8 @@
         .btn {
             display: inline-flex;
             align-items: center;
-            padding: 0.375rem 1rem;
+            justify-content: center;
+            padding: 0.5rem 1rem;
             font-size: 1rem;
             border-radius: 0.375rem;
             border: 1px solid transparent;
@@ -114,6 +110,32 @@
         .btn-success:hover {
             background-color: #157347;
         }
+
+        /* RESPONSIVIDADE PARA CELULAR (MOBILE) */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+            }
+            .card-body {
+                padding: 1.25rem;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+                margin-bottom: 0;
+            }
+            .form-row > div {
+                margin-bottom: 1.25rem;
+            }
+            .form-footer {
+                flex-direction: column-reverse;
+                gap: 0.75rem;
+            }
+            .form-footer .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -128,10 +150,8 @@
 
             <form th:action="@{/produtos/salvar}" method="POST" enctype="multipart/form-data">
 
-                <!-- AJUSTE 1: Campo oculto que envia a caixa de origem para o Controller ao salvar -->
                 <input type="hidden" name="caixaIdAtual" th:value="${caixaIdAtual}">
 
-                <!-- Controle de ID para Edição -->
                 <input type="hidden" name="id" th:value="${produto != null ? produto.id : null}">
 
                 <div class="form-group">
@@ -144,7 +164,6 @@
                     <input type="text" name="categoria" th:value="${produto != null ? produto.categoria : ''}" class="form-control" required>
                 </div>
 
-                <!-- Grid de 2 colunas para Preço e Quantidade -->
                 <div class="form-row">
                     <div>
                         <label class="form-label">Preço Unitário</label>
@@ -156,7 +175,6 @@
                     </div>
                 </div>
 
-                <!-- Grid de 2 colunas para Validade e Caixa -->
                 <div class="form-row">
                     <div>
                         <label class="form-label">Data de Validade</label>
@@ -165,13 +183,11 @@
                     <div>
                         <label class="form-label">Vincular ao Caixa</label>
 
-                        <!-- MUDANÇA: Se for CADASTRO NOVO vindo de uma caixa, exibe o campo cinza e bloqueado -->
                         <div th:if="${caixaIdAtual != null && produto == null}">
                             <input type="hidden" name="caixaId" th:value="${caixaIdAtual}">
                             <input type="text" th:value="${nomeCaixaOrigem}" class="form-control" style="background-color: #e9ecef; cursor: not-allowed;" readonly>
                         </div>
 
-                        <!-- MUDANÇA: Se for LISTA GERAL ou EDIÇÃO, libera a caixa de seleção original para escolha -->
                         <div th:unless="${caixaIdAtual != null && produto == null}">
                             <select name="caixaId" class="form-select" required>
                                 <option value="" disabled selected>Selecione...</option>
@@ -190,7 +206,6 @@
                 </div>
 
                 <div class="form-footer">
-                    <!-- AJUSTE 2: Se clicar em cancelar, também mantém o filtro da caixa de origem na URL -->
                     <a th:href="${caixaIdAtual != null} ? @{/produtos(caixaId=${caixaIdAtual})} : @{/produtos}" class="btn btn-outline-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-success">Confirmar e Salvar</button>
                 </div>

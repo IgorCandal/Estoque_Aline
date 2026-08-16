@@ -1,4 +1,5 @@
 <nav th:fragment="navegacao" class="custom-navbar">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         .custom-navbar {
             background-color: #212529;
@@ -34,6 +35,24 @@
         }
         .nav-item:hover {
             opacity: 1;
+        }
+
+        /* RESPONSIVIDADE PARA CELULAR (MOBILE) */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 0.75rem;
+                text-align: center;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+                gap: 1.5rem;
+            }
+            .nav-item {
+                padding: 0.25rem 0.75rem;
+                font-size: 1.05rem;
+            }
         }
     </style>
 

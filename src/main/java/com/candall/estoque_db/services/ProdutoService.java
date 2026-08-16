@@ -210,7 +210,8 @@ public class ProdutoService {
                 produto.getPreco(),
                 produto.getQuantidade(),
                 produto.getPrecoTotal(),
-                produto.getCaixa() != null ? produto.getCaixa().getId() : null
+                produto.getCaixa() != null ? produto.getCaixa().getId() : null,
+                produto.getCaixa() != null ? produto.getCaixa().getCodigoCaixa() : "Sem Caixa"
         );
     }
 }

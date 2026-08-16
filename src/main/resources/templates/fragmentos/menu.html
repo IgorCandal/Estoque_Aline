@@ -1,5 +1,4 @@
 <nav th:fragment="navegacao" class="custom-navbar">
-    <!-- Estilo embutido no fragmento para que ele funcione automaticamente em qualquer página que o chame -->
     <style>
         .custom-navbar {
             background-color: #212529;
@@ -8,7 +7,7 @@
             padding: 0.75rem 0;
         }
         .nav-container {
-            max-width: 700px; /* Alinhado perfeitamente com o tamanho do container de Caixas */
+            max-width: 700px;
             margin: 0 auto;
             padding: 0 1rem;
             display: flex;
@@ -39,7 +38,7 @@
     </style>
 
     <div class="nav-container">
-        <a class="nav-brand" th:href="@{/produtos}">🛒 Sistema Aline Estoque</a>
+        <a class="nav-brand" th:href="@{/produtos}">🛒 Sistema de Estoque</a>
         <div class="nav-links">
             <a class="nav-item" th:href="@{/produtos}">📦 Produtos</a>
             <a class="nav-item" th:href="@{/caixas}">📥 Caixas</a>

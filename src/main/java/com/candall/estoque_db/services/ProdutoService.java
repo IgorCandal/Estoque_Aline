@@ -22,6 +22,7 @@ import com.candall.estoque_db.repositories.CaixaRepository;
 import com.candall.estoque_db.repositories.ProdutoRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +30,10 @@ public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
     private final CaixaRepository caixaRepository;
+    private final UploadImagemService uploadImagemService;
 
     private final String Upload = "C:/estoque-uploads/";
-    private final String Base_URL = "http://localhost:8080/imagens/";
+    private final String Base_URL = "/imagens/";
 
     @Transactional
     public ProdutoResponseDto criar(ProdutoRequestDto dto, MultipartFile imagem) throws IOException {
@@ -40,7 +42,7 @@ public class ProdutoService {
 
         String imagemUrl = null;
         if (imagem != null && !imagem.isEmpty()) {
-            imagemUrl = salvarImagemLocal(imagem);
+            imagemUrl = uploadImagemService.enviarParaNuvem(imagem);
         }
 
         Produto produto = Produto.builder()
@@ -128,8 +130,7 @@ public class ProdutoService {
         }
 
         if (novaImagem != null && !novaImagem.isEmpty()) {
-            deletarImagemLocal(produtoExistente.getImagemUrl());
-            String novaUrl = salvarImagemLocal(novaImagem);
+            String novaUrl = uploadImagemService.enviarParaNuvem(novaImagem);
             produtoExistente.setImagemUrl(novaUrl);
         }
 
@@ -142,7 +143,6 @@ public class ProdutoService {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
-        deletarImagemLocal(produto.getImagemUrl());
         produtoRepository.delete(produto);
     }
 
@@ -183,16 +183,22 @@ public class ProdutoService {
         Path filePath = Paths.get(Upload + treatedName);
         Files.write(filePath, imagem.getBytes());
 
-        return Base_URL + treatedName;
+        return treatedName;
     }
 
 
     private void deletarImagemLocal(String urlImagem) {
-        if (urlImagem != null && urlImagem.startsWith(Base_URL)) {
+        if (urlImagem != null && !urlImagem.isEmpty()) {
             try {
-                String nomeArquivo = urlImagem.substring(Base_URL.length());
-                Path caminhoCompleto = Paths.get(Upload + nomeArquivo);
+                String nomeArquivo = urlImagem;
 
+                if (urlImagem.contains("/imagens/")) {
+                    nomeArquivo = urlImagem.substring(urlImagem.lastIndexOf("/imagens/") + 9);
+                } else if (urlImagem.startsWith("http")) {
+                    return;
+                }
+
+                Path caminhoCompleto = Paths.get(Upload + nomeArquivo);
                 Files.deleteIfExists(caminhoCompleto);
             } catch (IOException e) {
                 throw new FileStorageException("Falha ao deletar a imagem do disco local", e);
@@ -201,6 +207,11 @@ public class ProdutoService {
     }
 
     private ProdutoResponseDto converterParaResponseDto(Produto produto) {
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        if (produto.getPreco() != null && produto.getQuantidade() != null) {
+            total = produto.getPreco().multiply(java.math.BigDecimal.valueOf(produto.getQuantidade()));
+        }
+
         return new ProdutoResponseDto(
                 produto.getId(),
                 produto.getNome(),
@@ -209,7 +220,7 @@ public class ProdutoService {
                 produto.getImagemUrl(),
                 produto.getPreco(),
                 produto.getQuantidade(),
-                produto.getPrecoTotal(),
+                total,
                 produto.getCaixa() != null ? produto.getCaixa().getId() : null,
                 produto.getCaixa() != null ? produto.getCaixa().getCodigoCaixa() : "Sem Caixa"
         );

@@ -32,7 +32,7 @@ public class ProdutoController {
                                                     @RequestParam Long caixaId,
                                                     @RequestParam(value = "imagem", required = false) MultipartFile imagem) throws IOException {
 
-        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, validade, preco, quantidade, caixaId);
+        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, validade, preco, quantidade, caixaId, null);
 
         ProdutoResponseDto response = produtoService.criar(dto, imagem);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -73,7 +73,7 @@ public class ProdutoController {
             @RequestParam(value = "caixaId", required = false) Long caixaId,
             @RequestParam(value = "imagem", required = false) MultipartFile imagem) throws IOException {
 
-        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, validade, preco, quantidade, caixaId);
+        ProdutoRequestDto dto = new ProdutoRequestDto(nome, categoria, validade, preco, quantidade, caixaId, null);
 
         ProdutoResponseDto response = produtoService.atualizar(id, dto, imagem);
         return ResponseEntity.ok(response);

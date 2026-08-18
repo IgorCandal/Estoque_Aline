@@ -26,5 +26,7 @@ public record ProdutoRequestDto (
         Integer quantidade,
 
         @NotNull
-        Long caixaId
+        Long caixaId,
+
+        String imagemUrl
 ){}
